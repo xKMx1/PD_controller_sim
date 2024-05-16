@@ -4,7 +4,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-    
+
+h = 0.001       # krok obliczeń
+T = 10.0        # całkowity czas symulacji
+
+a1 = 1
+a0 = 2
+b2 = 3
+b1 = 2
+b0 = 1
 
 root = Tk()
 frm = ttk.Frame(root, padding=100)
@@ -19,4 +27,4 @@ canvas = FigureCanvasTkAgg(fig, root)
 canvas.draw()
 # plt.show()
 
-# root.mainloop()
+root.mainloop()
