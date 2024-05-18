@@ -11,6 +11,7 @@ h = 0.001       # krok obliczeń
 T = 10.0        # całkowity czas symulacji
 
 total = int(T / h) + 1
+time = list(range(0, total))
 
 u = np.zeros(total)  # sygnał wejściowy
 u1p = np.zeros(total)  # pierwsza pochodna sygnału wejściowego
@@ -54,12 +55,12 @@ frm = ttk.Frame(root, padding=100)
 frm.grid()
 
 fig, (ax, bx) = plt.subplots(2, 1)
-ax.plot([1,2,3,4], [1,2,3,4])
-bx.plot([1,2,3,4], [3,4,6,2])
+ax.plot(time, y1p)
+bx.plot(time, y2p)
 
 
 canvas = FigureCanvasTkAgg(fig, root)
 canvas.draw()
-# plt.show()
+plt.show()
 
 root.mainloop()
