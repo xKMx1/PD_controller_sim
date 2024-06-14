@@ -4,25 +4,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+# Constants
 PI = np.pi
+h = 0.001       # calculation step
+T = 10.0        # total simulation time
 
-h = 0.001       # krok obliczeń
-T = 10.0        # całkowity czas symulacji
-
+# Time array initialization of input and output signal arrays
 total = int(T / h) + 1
 time = np.linspace(0, T, total)
 
-u = np.zeros(total)  # sygnał wejściowy
-u1p = np.zeros(total)  # pierwsza pochodna sygnału wejściowego
-u2p = np.zeros(total)  # druga pochodna sygnału wejściowego
-y = np.zeros(total)  # sygnał wyjściowy
-y1p = np.zeros(total)  # pierwsza pochodna sygnału wyjściowego
-y2p = np.zeros(total)  # druga pochodna sygnału wyjściowego
+#Initialization of input and output signal arrays
+u = np.zeros(total)    # Input signal
+u1p = np.zeros(total)  # First derivative of input signal
+u2p = np.zeros(total)  # Second derivative of input signal
+y = np.zeros(total)    # Output signal
+y1p = np.zeros(total)  # First derivative of output signal
+y2p = np.zeros(total)  # Second derivative of output signal
 
+# Function to approximate Dirac delta function
 def dirac_delta_approx(x, epsilon): 
     return (1 / (epsilon * np.sqrt(2 * np.pi))) * np.exp(-x**2 / (2 * epsilon**2))
 
-# Sygnał wejściowy (1. harmoniczny) i jego pochodne
+# Harmonic input signal and its derivatives
 def harmonic_function(L=2.5, M=8.0):
     w = 2.0 * PI * L / T
 
@@ -32,7 +35,7 @@ def harmonic_function(L=2.5, M=8.0):
         u1p[i] = M * w * np.cos(w * t)
         u2p[i] = -M * w * w * np.sin(w * t)
 
-# Sygnał wejściowy (2. trójkątny) i jego pochodne
+# Triangular input signal and its derivatives
 def triangle_function(A=100, F=2):
     for i in range(total):
         t = i*h
@@ -41,7 +44,7 @@ def triangle_function(A=100, F=2):
         delta_arg = t * F - np.floor(t * F + 0.5)
         u2p[i] = 8 * A * F * dirac_delta_approx(delta_arg, 0.001)
 
-# Sygnał wejściowy (3. prostokątny) i jego pochodne
+# Square input signal and its derivatives
 def square_function(AM=20, X=1, H=0.01):
     for i in range(total):
         t = i*h
@@ -49,31 +52,25 @@ def square_function(AM=20, X=1, H=0.01):
         u1p[i] = 0
         u2p[i] = 0
 
-# transmitance constants
-a1 = 4
-a0 = 20
-b2 = 300
-b1 = 149
-b0 = 69
-# regulator constants
-kd = 20
-kp = 4
-
+# Main class for PD Simulator
 class PDSimulator:
     def __init__(self, root):
         self.root = root
         self.root.title("Symulator PD")
 
+        # Create figure for plotting
         self.fig, (self.ax, self.bx) = plt.subplots(2, 1)
-
         self.canvas = FigureCanvasTkAgg(self.fig, self.root)
 
+        # Quit button
         self.quit_button = ttk.Button(self.root, text="Quit", command=root.quit)
         self.quit_button.pack(side=tk.BOTTOM)
 
+        # Canvas widget for plotting
         self.canvas_widget = self.canvas.get_tk_widget()
         self.canvas_widget.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=1)
 
+        # Label for parameter input
         self.label = ttk.Label(self.root, text="Enter parameters:")
         self.label.pack(side=tk.TOP)
 
@@ -210,6 +207,7 @@ class PDSimulator:
 
         self.update_plot()
 
+    # Function to update input parameters based on signal type
     def update_input_parameters(self):
         signal_type = self.signal_var.get()
         if signal_type == "harmonic":
@@ -237,6 +235,7 @@ class PDSimulator:
             self.X_entry.grid()
             self.H_entry.grid()
 
+    # Function to calculate and plot results
     def calculate(self):
         self.a0 = float(self.a0_entry.get())
         self.a1 = float(self.a1_entry.get())
@@ -262,17 +261,19 @@ class PDSimulator:
             square_function(AM, X, H)
 
         # closed loop transmitance values
-        self.A1 = -(self.b1 + self.kd * self.a0 + self.kp * self.a1) / (self.b2 + self.kd * self.a1)
+        self.A1 = (self.b1 + self.kd * self.a0 + self.kp * self.a1) / (self.b2 + self.kd * self.a1)
         self.A0 = (self.b0 + self.kp * self.a0) / (self.b2 + self.kd * self.a1)
         self.B2 = (self.kd * self.a1) / (self.b2 + self.kd * self.a1)
         self.B1 = (self.kd * self.a0 + self.kp * self.a1) / (self.b2 + self.kd * self.a1)
         self.B0 = (self.kp * self.a0) / (self.b2 + self.kd * self.a1)
 
+        # Main computation loop for y, y1p, y2p
         for i in range(total - 1):
             y2p[i] = -self.A1 * y1p[i] - self.A0 * y[i] + self.B2 * u2p[i] + self.B1 * u1p[i] + self.B0 * u[i]
             y1p[i + 1] = y1p[i] + h * y2p[i]
             y[i + 1] = y[i] + h * y1p[i] + (h * h / 2.0) * y2p[i]
 
+    
     def print_to_plot(self):
         self.ax.clear()
         self.ax.plot(time, u, color='b')
