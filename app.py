@@ -293,10 +293,6 @@ class PDSimulator:
         self.calculate()
         self.print_to_plot()
 
-def main():
-    root = tk.Tk()
-    app = PDSimulator(root)
-    root.mainloop()
-
-if __name__ == "__main__":
-    main()
+root = tk.Tk()
+app = PDSimulator(root)
+root.mainloop()
